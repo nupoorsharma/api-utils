@@ -1,4 +1,4 @@
-# MetaMind utilities
+# api-utils
 This repo contains two utilities to quick start your experience with the MetaMind vision api. These utilities are:
 
 - `jwt.sh`: a shell script which simplifies the configuration of your private key.
