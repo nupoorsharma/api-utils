@@ -9,7 +9,7 @@ This repo contains two utilities to quick start your experience with the MetaMin
 Clone this repo to your local system:
 
 ```
-git clone https://github.com/MetaMind/slurp.git
+git clone https://github.com/MetaMind/api-utils
 ```
 
 Make sure your script is executable:
@@ -58,7 +58,7 @@ Expiration time means this token will only be valid for a preset time. For testi
 Clone this repo to your local system:
 
 ```
-git clone https://github.com/MetaMind/slurp.git
+git clone https://github.com/MetaMind/api-utils
 ```
 
 Slurp requires some external dependencies to process JSON:
