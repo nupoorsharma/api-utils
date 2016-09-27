@@ -14,41 +14,47 @@ DIR=$3
 if [ ${DIR:${#DIR}-1} = / ]; then
 	DIR=${DIR%/} 
 fi
-for i in $(ls $DIR); do
-	if [ $COUNTER -eq 0 ]; then
-		LABELS=$i
+
+
+find $DIR/* -type d -maxdepth 0 | awk -F\/ '{print $NF}' | while read label; do
+	if [ -z "$LABELS" ]; then
+		LABELS="$label"
 	else
-		LABELS=$LABELS,$i
+		LABELS="$LABELS,$label"
 	fi
-	let COUNTER=COUNTER+1
+	echo "$LABELS" > /tmp/labels
 done
+
+LABELS=`cat /tmp/labels`
+
+echo "LABELS:  $LABELS"
 
 declare -i LABELCOUNTER=0
 declare -i EVEN=0
-DATASET_RESULT=( $(curl -s -w "\n%{http_code}" -H "Authorization: Bearer $1" -X POST -F "name=dataset-$(uuidgen)" -F labels=$LABELS -L $2/v1/vision/datasets | sed 's/ /_/g') )
 
-if [ ${DATASET_RESULT[1]} != 200 ]; then
-	echo "Could not create dataset: ${DATASET_RESULT[0]}"
+DATASET_RESULT=$(curl -f -s -H "Authorization: Bearer $1" -X POST -F "name=dataset-$(uuidgen)" -F "labels=$LABELS" -L $2/v1/vision/datasets)
+if [ $? != 0 ]; then
+	echo "Could not create dataset"
 	exit
 else
-	DATASET_ID=$(echo ${DATASET_RESULT[0]} | jq '.id')
+	DATASET_ID=$(echo $DATASET_RESULT | jq '.id')
 	echo "Created dataset $DATASET_ID with labels:$LABELS"
 fi
 
-
-for i in $(echo ${DATASET_RESULT[0]} | jq '.labelSummary.labels[] | .name, .id' | sed 's/"//g'); do
+echo $DATASET_RESULT | jq '.labelSummary.labels[] | .name, .id' | sed 's/"//g' | while read i; do
 	EVEN=LABELCOUNTER%2
 	if [ $EVEN -eq 0 ]; then
 		LABEL=$i
 	else
 		ID=$i
-		for j in $(ls $DIR/$LABEL); do
-			EXAMPLE_RESULT=( $(curl -s -w "\n%{http_code}" -H "Authorization: Bearer $1" -X POST -F "name=example-$(uuidgen)" -F labelId=$ID -F "data=@$DIR/$LABEL/$j" -L $2/v1/vision/datasets/$DATASET_ID/examples | sed 's/ /_/g') )
-			if [ ${EXAMPLE_RESULT[1]} != 200 ]; then
-				echo "FAILED:$DIR/$LABEL/$j:${EXAMPLE_RESULT[0]}"
+		find "$DIR/$LABEL" -type f | while read j ; do
+			EXAMPLE_RESULT=$(curl -f -s -H "Authorization: Bearer $1" -X POST -F "name=example-$(uuidgen)" -F labelId=$ID -F "data=@$j" -L $2/v1/vision/datasets/$DATASET_ID/examples) 
+			EXAMPLE_STATUS=$?
+			if [ $EXAMPLE_STATUS != 0 ]; then
+				echo "FAILED:$j:$EXAMPLE_STATUS"
 			else
-				EXAMPLE_ID=$(echo ${EXAMPLE_RESULT[0]} | jq '.id')
-				echo "SUCCESS:$DIR/$LABEL/$j:$EXAMPLE_ID"
+				EXAMPLE_ID=$(echo $EXAMPLE_RESULT | jq '.id')
+				echo "SUCCESS:$j:$EXAMPLE_ID"
 			fi
 		done
 	fi
