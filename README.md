@@ -18,7 +18,7 @@ Make sure your script is executable:
 chmod +x jwt.sh
 ```
 
-Find the .jks file you got from [force.com](http://force.com) and add your email from your force.com account, an expiration time, and the MetaMind api endpoint:
+Update the parameters in the following command to: the .jks keystore file you downloaded from Salesforce, the email address you used to sign up for an account, and the token expiration time:
 
 ```
 ./jwt.sh <key_file>.jks <email_address> <expiration_in_seconds> https://api.metamind.io
