@@ -15,19 +15,19 @@ if [ ${DIR:${#DIR}-1} = / ]; then
 	DIR=${DIR%/} 
 fi
 
+OLDIFS=$IFS
+IFS=$'\n'
+labelarray=($(find $DIR/* -type d -maxdepth 0 | awk -F\/ '{print $NF}'))
+IFS=$OLDIFS
 
-find $DIR/* -type d -maxdepth 0 | awk -F\/ '{print $NF}' | while read label; do
+for label in "${labelarray[@]}";
+do
 	if [ -z "$LABELS" ]; then
 		LABELS="$label"
 	else
 		LABELS="$LABELS,$label"
 	fi
-	echo "$LABELS" > /tmp/labels
 done
-
-LABELS=`cat /tmp/labels`
-
-echo "LABELS:  $LABELS"
 
 declare -i LABELCOUNTER=0
 declare -i EVEN=0
