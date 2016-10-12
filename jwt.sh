@@ -6,6 +6,9 @@ fi
 
 keytool -v -importkeystore -srckeystore $1 -destkeystore privateKey.p12 -deststoretype PKCS12
 
+echo Press any key to continue...
+read _
+
 openssl pkcs12 -in privateKey.p12 -nocerts -nodes -out private_key
 
 jwt1=`echo -n '{"alg":"RS256","typ":"JWT"}' | openssl base64 -e`
